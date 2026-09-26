@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 import narwhals as nw
-from tests.utils import POLARS_VERSION, assert_equal_data
+from tests.utils import assert_equal_data
 
 if TYPE_CHECKING:
     from tests.utils import Constructor, ConstructorEager
@@ -46,9 +46,6 @@ def test_contains_none_expr(
         backend in str(constructor)
         for backend in ("dask", "modin", "cudf", "pyarrow", "pandas")
     ):
-        request.applymarker(pytest.mark.xfail)
-    if "polars" in str(constructor) and POLARS_VERSION < (1, 24):
-        # Older Polars returns null for `list.contains(None)`.
         request.applymarker(pytest.mark.xfail)
     df = nw.from_native(constructor({"a": [[1, None], [None], [1, 2], [], None]}))
     result = df.select(nw.col("a").cast(nw.List(nw.Int32())).list.contains(None))

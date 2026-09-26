@@ -30,7 +30,10 @@ class SparkLikeExprListNamespace(
         def func(expr: Column) -> Column:
             F = self.compliant._F
             if item is None:
-                return F.array_size(expr) > F.array_size(F.array_compact(expr))
+                if self.compliant._implementation.is_sqlframe():
+                    # SQLFrame has no `exists`
+                    return F.array_size(expr) > F.array_size(F.array_compact(expr))
+                return F.exists(expr, lambda x: x.isNull())  # pragma: no cover
             # Spark returns null instead of false when there is no match and the list
             # holds a null element.
             return F.coalesce(
