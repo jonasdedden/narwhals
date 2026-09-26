@@ -47,9 +47,10 @@ def test_contains_none_expr(
         for backend in ("dask", "modin", "cudf", "pyarrow", "pandas")
     ):
         request.applymarker(pytest.mark.xfail)
-    df = nw.from_native(constructor({"a": [[1, None], [None], [1, 2], [], None]}))
+    data = {"a": [[1, None], [None], [1, 2], [1, 1], [2, 1, None, 1], [], None]}
+    df = nw.from_native(constructor(data))
     result = df.select(nw.col("a").cast(nw.List(nw.Int32())).list.contains(None))
-    assert_equal_data(result, {"a": [True, True, False, False, None]})
+    assert_equal_data(result, {"a": [True, True, False, False, True, False, None]})
 
 
 def test_contains_series(

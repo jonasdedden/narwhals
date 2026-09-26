@@ -27,7 +27,7 @@ class IbisExprListNamespace(LazyExprNamespace["IbisExpr"], ListNamespace["IbisEx
     def contains(self, item: NonNestedLiteral) -> IbisExpr:
         if item is None:
             return self.compliant._with_callable(
-                lambda expr: expr.length() > expr.filter(lambda x: x.notnull()).length()
+                lambda expr: expr.filter(lambda x: x.isnull()).length() > 0
             )
         return self.compliant._with_callable(lambda expr: expr.contains(item))
 
