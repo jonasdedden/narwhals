@@ -30,13 +30,12 @@ class SparkLikeExprListNamespace(
         def func(expr: Column) -> Column:
             F = self.compliant._F
             if item is None:
-                if self.compliant._implementation.is_sqlframe():
-                    return F.array_size(expr) > F.array_size(F.array_compact(expr))
-                # Higher-order functions like `exists` are much slower than sorting on
-                # PySpark; `sort_array` places nulls first.
-                return F.when(  # pragma: no cover
-                    F.array_size(expr) > 0, F.sort_array(expr)[0].isNull()
-                ).otherwise(F.when(expr.isNotNull(), F.lit(False)))
+                if not self.compliant._implementation.is_sqlframe():  # pragma: no cover
+                    # Unlike `exists`, this is linear without evaluating a lambda per
+                    # element. SQLFrame's `array_intersect` drops nulls.
+                    null_array = F.array(F.lit(None))
+                    return F.array_size(F.array_intersect(expr, null_array)) > 0
+                return F.array_size(expr) > F.array_size(F.array_compact(expr))
             # Spark returns null instead of false when there is no match and the list
             # holds a null element.
             return F.coalesce(
